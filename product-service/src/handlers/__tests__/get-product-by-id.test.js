@@ -4,13 +4,13 @@ import { BaseError } from '../../models/base-error';
 
 jest.mock('../../services/products-service', () => {
   const productsServiceInstance = {
-    getProductById: jest.fn()
+    getProductById: jest.fn(),
   };
   return {
-    ProductsService: function() {
-      return productsServiceInstance
-    }
-  }
+    ProductsService: function () {
+      return productsServiceInstance;
+    },
+  };
 });
 
 describe('getProductById', () => {
@@ -19,11 +19,11 @@ describe('getProductById', () => {
   beforeEach(() => {
     eventMock = {
       pathParameters: {
-        productId: 'testId'
-      }
-    }
+        productId: 'testId',
+      },
+    };
     serviceInstance = new ProductsService();
-  })
+  });
   test('should return response with product returned by the service', async () => {
     const productMock = 'productMock';
     serviceInstance.getProductById.mockResolvedValueOnce(productMock);
@@ -34,17 +34,17 @@ describe('getProductById', () => {
         'Access-Control-Allow-Origin': '*',
       },
       body: JSON.stringify({ product: productMock }),
-    })
-  })
+    });
+  });
   test('should return response with error, if service throws BaseError', async () => {
     const error = new BaseError(500, 'Some test error');
     serviceInstance.getProductById.mockRejectedValueOnce(error);
 
     expect(await getProductById(eventMock)).toMatchObject({
       statusCode: error.code,
-      body: JSON.stringify({ error: error.message })
-    })
-  })
+      body: JSON.stringify({ error: error.message }),
+    });
+  });
 
   test('should throwerror, if service throws not BaseError', async () => {
     expect.assertions(1);
@@ -53,9 +53,8 @@ describe('getProductById', () => {
 
     try {
       await getProductById(eventMock);
-    }
-    catch(e) {
+    } catch (e) {
       expect(e).toBe(error);
     }
-  })
-})
+  });
+});

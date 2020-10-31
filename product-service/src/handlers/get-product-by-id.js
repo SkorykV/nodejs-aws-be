@@ -14,18 +14,16 @@ export async function getProductById(event) {
       },
       body: JSON.stringify({ product }),
     };
-  }
-  catch(e) {
-    if(e instanceof BaseError) {
+  } catch (e) {
+    if (e instanceof BaseError) {
       return {
         statusCode: e.code,
         headers: {
           'Access-Control-Allow-Origin': '*',
         },
-        body: JSON.stringify({ error: e.message })
-      }
+        body: JSON.stringify({ error: e.message }),
+      };
     }
     throw e;
   }
-  
-};
+}
