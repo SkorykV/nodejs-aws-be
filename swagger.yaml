@@ -1,0 +1,70 @@
+swagger: "2.0"
+info:
+  description: "This is an api that is used by our [table tennis online shop](https://de9bltgxbvako.cloudfront.net/). There you could buy everything you need for the best table tennis experience!"
+  version: "1.0.0"
+  title: "Swagger for Table Tennis Online Shop"
+  contact:
+    email: "volodymyrskorik@gmail.com"
+host: "jh16kdf75j.execute-api.eu-west-1.amazonaws.com"
+basePath: "/dev"
+tags:
+- name: "product"
+  description: "Everything about our products"
+schemes:
+- "https"
+paths:
+  /products:
+    get:
+      tags:
+      - "product"
+      summary: "Get all available products"
+      operationId: "getAllProducts"
+      produces:
+      - "application/json"
+      responses:
+        "200":
+          description: "successful operation"
+          schema:
+            type: "array"
+            items:
+              $ref: "#/definitions/Product"
+  /products/{productId}:
+    get:
+      tags:
+      - "product"
+      summary: "Get product by id"
+      description: ""
+      operationId: "findProductById"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "productId"
+        in: "path"
+        description: "UUID of product"
+        required: true
+        type: "string"
+      responses:
+        "200":
+          description: "successful operation"
+          schema:
+            $ref: "#/definitions/Product"
+        "404":
+          description: "Product was not found"
+definitions:
+  Product:
+    type: "object"
+    properties:
+      id:
+        type: "string"
+        format: "uuid"
+      title:
+        type: "string"
+      description:
+        type: "string"
+      price:
+        type: "number"
+        format: "float"
+        minimum: 0
+      count:
+        type: "integer"
+        minimum: 0
