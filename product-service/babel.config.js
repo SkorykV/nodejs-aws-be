@@ -1,18 +1,19 @@
-module.exports = api => {
+module.exports = (api) => {
   const isTest = api.env('test');
   // You can use isTest to determine what presets and plugins to use.
 
   return {
-    plugins: isTest ? [] : ["source-map-support"],
+    plugins: isTest ? [] : ['source-map-support'],
     presets: [
-        [
-            "@babel/preset-env",
-            {
-                targets: {
-                    node: "12"
-                }
-            }
-        ]
-    ]
-};
+      [
+        '@babel/preset-env',
+        {
+          modules: 'commonjs',
+          targets: {
+            node: '12',
+          },
+        },
+      ],
+    ],
+  };
 };
