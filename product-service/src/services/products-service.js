@@ -1,17 +1,25 @@
 'use strict';
-import availableProducts from '../data/products-list.json';
 import { BaseError } from '../models/base-error';
+import { productPostgresRepository } from '../db/postgres/product.postgres.repository';
 
 export class ProductsService {
   async getAvailableProducts() {
-    return availableProducts;
+    try {
+      return await productPostgresRepository.getAllProducts();
+    } catch (e) {
+      throw new BaseError(500, e.message);
+    }
   }
 
   async getProductById(id) {
-    const foundProduct = availableProducts.find((p) => p.id === id);
-    if (!foundProduct) {
-      throw new BaseError(404, `Product with ${id} was not found`);
+    try {
+      const foundProduct = await productPostgresRepository.getProductByID(id);
+      if (!foundProduct) {
+        throw new BaseError(404, `Product with ${id} was not found`);
+      }
+      return foundProduct;
+    } catch (e) {
+      throw new BaseError(500, e.message);
     }
-    return foundProduct;
   }
 }

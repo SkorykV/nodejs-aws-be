@@ -27,11 +27,19 @@ provider:
   region: eu-west-1
 
 plugins:
+  - serverless-dotenv-plugin
   - serverless-webpack
 
 custom:
   webpack:
     includeModules: true
+
+environment:
+  PGHOST: ${env:PGHOST}
+  PGPORT: ${env:PGPORT}
+  PGUSER: ${env:PGUSER}
+  PGPASSWORD: ${env:PGPASSWORD}
+  PGDATABASE: ${env:PGDATABASE}
 
 functions:
   getProductsList:

@@ -11,4 +11,4 @@ export async function getProductsList(event) {
     },
     body: JSON.stringify(products),
   };
-};
+}
