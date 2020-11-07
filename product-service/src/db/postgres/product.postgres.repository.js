@@ -42,6 +42,32 @@ class ProductPostgresRepository {
     }
   }
 
+  async createProduct(productData) {
+    const client = await this._connect();
+    try {
+      const product = (
+        await client.query(
+          'insert into products (title, description, price) values ($1, $2, $3) RETURNING *',
+          [productData.title, productData.description, productData.price],
+        )
+      ).rows[0];
+
+      const stock = (
+        await client.query(
+          'insert into stocks (product_id, "count") values ($1, $2) RETURNING *',
+          [product.id, productData.count],
+        )
+      ).rows[0];
+
+      return { ...product, count: stock.count };
+    } catch (err) {
+      console.log('Error occurred during db request execution', err);
+      throw new Error('DB request execution error');
+    } finally {
+      await client.end();
+    }
+  }
+
   async _connect() {
     const client = new Client(dbOptions);
     await client.connect();

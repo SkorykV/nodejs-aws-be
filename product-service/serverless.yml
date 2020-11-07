@@ -34,14 +34,17 @@ custom:
   webpack:
     includeModules: true
 
-environment:
-  PGHOST: ${env:PGHOST}
-  PGPORT: ${env:PGPORT}
-  PGUSER: ${env:PGUSER}
-  PGPASSWORD: ${env:PGPASSWORD}
-  PGDATABASE: ${env:PGDATABASE}
-
 functions:
+  createProduct:
+    handler: src/handlers/create-product.createProduct
+    events:
+      - http:
+          path: products
+          method: post
+          cors: true
+          request:
+            schema:
+              application/json: ${file(src/serverless/schemas/create_request.json)}
   getProductsList:
     handler: src/handlers/get-products.getProductsList
     events:

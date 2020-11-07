@@ -2,7 +2,7 @@
 import { BaseError } from '../models/base-error';
 import { productPostgresRepository } from '../db/postgres/product.postgres.repository';
 
-export class ProductsService {
+class ProductsService {
   async getAvailableProducts() {
     try {
       return await productPostgresRepository.getAllProducts();
@@ -22,4 +22,14 @@ export class ProductsService {
       throw new BaseError(500, e.message);
     }
   }
+
+  async createProduct(productData) {
+    try {
+      return await productPostgresRepository.createProduct(productData);
+    } catch (e) {
+      throw new BaseError(500, e.message);
+    }
+  }
 }
+
+export const productsService = new ProductsService();
