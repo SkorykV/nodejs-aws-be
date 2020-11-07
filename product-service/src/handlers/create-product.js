@@ -10,9 +10,7 @@ export async function createProduct(event) {
     const product = await productsService.createProduct(productData);
     return {
       statusCode: 200,
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-      },
+      headers: { ...corsHeaders },
       body: JSON.stringify({ product }),
     };
   } catch (e) {
