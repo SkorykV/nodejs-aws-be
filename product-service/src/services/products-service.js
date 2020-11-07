@@ -4,31 +4,19 @@ import { productPostgresRepository } from '../db/postgres/product.postgres.repos
 
 class ProductsService {
   async getAvailableProducts() {
-    try {
-      return await productPostgresRepository.getAllProducts();
-    } catch (e) {
-      throw new BaseError(500, e.message);
-    }
+    return await productPostgresRepository.getAllProducts();
   }
 
   async getProductById(id) {
-    try {
-      const foundProduct = await productPostgresRepository.getProductByID(id);
-      if (!foundProduct) {
-        throw new BaseError(404, `Product with ${id} was not found`);
-      }
-      return foundProduct;
-    } catch (e) {
-      throw new BaseError(500, e.message);
+    const foundProduct = await productPostgresRepository.getProductById(id);
+    if (!foundProduct) {
+      throw new BaseError(404, `Product with ${id} was not found`);
     }
+    return foundProduct;
   }
 
   async createProduct(productData) {
-    try {
-      return await productPostgresRepository.createProduct(productData);
-    } catch (e) {
-      throw new BaseError(500, e.message);
-    }
+    return await productPostgresRepository.createProduct(productData);
   }
 }
 

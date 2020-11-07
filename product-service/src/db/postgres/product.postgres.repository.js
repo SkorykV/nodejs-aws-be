@@ -26,7 +26,7 @@ class ProductPostgresRepository {
     }
   }
 
-  async getProductByID(id) {
+  async getProductById(id) {
     const client = await this._connect();
     try {
       const result = await client.query(
@@ -45,6 +45,7 @@ class ProductPostgresRepository {
   async createProduct(productData) {
     const client = await this._connect();
     try {
+      await client.query('BEGIN');
       const product = (
         await client.query(
           'insert into products (title, description, price) values ($1, $2, $3) RETURNING *',
@@ -52,16 +53,22 @@ class ProductPostgresRepository {
         )
       ).rows[0];
 
+      console.log('product successfully created');
+
       const stock = (
         await client.query(
-          'insert into stocks (product_id, "count") values ($1, $2) RETURNING *',
+          'insert into stocks (product_id, "count") values ($1, $2) RETURNING "count"',
           [product.id, productData.count],
         )
       ).rows[0];
 
-      return { ...product, count: stock.count };
+      console.log('product successfully created');
+
+      await client.query('COMMIT');
+      return { ...product, ...stock };
     } catch (err) {
       console.log('Error occurred during db request execution', err);
+      await client.query('ROLLBACK');
       throw new Error('DB request execution error');
     } finally {
       await client.end();

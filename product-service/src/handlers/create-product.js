@@ -1,10 +1,13 @@
 'use strict';
 import { productsService } from '../services/products-service';
 import { BaseError } from '../models/base-error';
+import { corsHeaders } from '../helpers/cors';
 
 export async function createProduct(event) {
   try {
-    const product = await productsService.createProduct(JSON.parse(event.body));
+    const productData = JSON.parse(event.body);
+    console.log('createProduct was called with next data:', productData);
+    const product = await productsService.createProduct(productData);
     return {
       statusCode: 200,
       headers: {
@@ -17,11 +20,15 @@ export async function createProduct(event) {
       return {
         statusCode: e.code,
         headers: {
-          'Access-Control-Allow-Origin': '*',
+          ...corsHeaders,
         },
         body: JSON.stringify({ error: e.message }),
       };
     }
-    throw e;
+    return {
+      statusCode: 500,
+      headers: { ...corsHeaders },
+      body: JSON.stringify({ error: e.message }),
+    };
   }
 }

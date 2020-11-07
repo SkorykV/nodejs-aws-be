@@ -1,9 +1,11 @@
 'use strict';
 import { productsService } from '../services/products-service';
 import { BaseError } from '../models/base-error';
+import { corsHeaders } from '../helpers/cors';
 
 export async function getProductById(event) {
   const productId = event.pathParameters.productId;
+  console.log(`getProductById was called with ${productId} parameter`);
   try {
     const product = await productsService.getProductById(productId);
     return {
@@ -17,12 +19,14 @@ export async function getProductById(event) {
     if (e instanceof BaseError) {
       return {
         statusCode: e.code,
-        headers: {
-          'Access-Control-Allow-Origin': '*',
-        },
+        headers: { ...corsHeaders },
         body: JSON.stringify({ error: e.message }),
       };
     }
-    throw e;
+    return {
+      statusCode: 500,
+      headers: { ...corsHeaders },
+      body: JSON.stringify({ error: e.message }),
+    };
   }
 }
