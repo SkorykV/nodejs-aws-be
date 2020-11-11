@@ -2,11 +2,16 @@
 import { productsService } from '../services/products-service';
 import { BaseError } from '../models/base-error';
 import { corsHeaders } from '../helpers/cors';
+import validate from 'uuid-validate';
 
 export async function getProductById(event) {
   const productId = event.pathParameters.productId;
   console.log(`getProductById was called with ${productId} parameter`);
+
   try {
+    if (!validate(productId)) {
+      throw new BaseError(400, 'product id should be uuid');
+    }
     const product = await productsService.getProductById(productId);
     return {
       statusCode: 200,
