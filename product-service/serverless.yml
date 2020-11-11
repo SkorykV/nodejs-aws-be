@@ -27,6 +27,7 @@ provider:
   region: eu-west-1
 
 plugins:
+  - serverless-dotenv-plugin
   - serverless-webpack
 
 custom:
@@ -34,6 +35,16 @@ custom:
     includeModules: true
 
 functions:
+  createProduct:
+    handler: src/handlers/create-product.createProduct
+    events:
+      - http:
+          path: products
+          method: post
+          cors: true
+          request:
+            schema:
+              application/json: ${file(src/serverless/schemas/create_request.json)}
   getProductsList:
     handler: src/handlers/get-products.getProductsList
     events:
@@ -50,3 +61,15 @@ functions:
             parameters:
               paths:
                 productId: true
+
+resources:
+  Resources:
+    GatewayResponseDefault4XX:
+      Type: 'AWS::ApiGateway::GatewayResponse'
+      Properties:
+        ResponseParameters:
+          gatewayresponse.header.Access-Control-Allow-Origin: "'*'"
+          gatewayresponse.header.Access-Control-Allow-Headers: "'*'"
+        ResponseType: DEFAULT_4XX
+        RestApiId:
+          Ref: 'ApiGatewayRestApi'

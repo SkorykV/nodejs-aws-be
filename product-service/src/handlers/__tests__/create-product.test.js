@@ -1,29 +1,32 @@
-import { getProductById } from '../get-product-by-id';
+import { createProduct } from '../create-product';
 import { productsService } from '../../services/products-service';
 import { BaseError } from '../../models/base-error';
 import { corsHeaders } from '../../helpers/cors';
 
 jest.mock('../../services/products-service', () => {
   const productsServiceInstance = {
-    getProductById: jest.fn(),
+    createProduct: jest.fn(),
   };
   return { productsService: productsServiceInstance };
 });
 
-describe('getProductById', () => {
+describe('createProduct', () => {
   let eventMock;
   beforeEach(() => {
     eventMock = {
-      pathParameters: {
-        productId: 'testId',
-      },
+      body: JSON.stringify({
+        title: 'testId',
+        description: 'test description',
+        price: 123,
+        count: 3,
+      }),
     };
   });
   test('should return response with product returned by the service', async () => {
     const productMock = 'productMock';
-    productsService.getProductById.mockResolvedValueOnce(productMock);
+    productsService.createProduct.mockResolvedValueOnce(productMock);
 
-    expect(await getProductById(eventMock)).toEqual({
+    expect(await createProduct(eventMock)).toEqual({
       statusCode: 200,
       headers: { ...corsHeaders },
       body: JSON.stringify({ product: productMock }),
@@ -31,9 +34,9 @@ describe('getProductById', () => {
   });
   test('should return response with error, if service throws BaseError', async () => {
     const error = new BaseError(500, 'Some test error');
-    productsService.getProductById.mockRejectedValueOnce(error);
+    productsService.createProduct.mockRejectedValueOnce(error);
 
-    expect(await getProductById(eventMock)).toMatchObject({
+    expect(await createProduct(eventMock)).toMatchObject({
       statusCode: error.code,
       body: JSON.stringify({ error: error.message }),
     });
@@ -41,9 +44,9 @@ describe('getProductById', () => {
 
   test('should return 500 response, if service throws not BaseError', async () => {
     const error = new Error('Some test error');
-    productsService.getProductById.mockRejectedValueOnce(error);
+    productsService.createProduct.mockRejectedValueOnce(error);
 
-    const actualResult = await getProductById(eventMock);
+    const actualResult = await createProduct(eventMock);
 
     expect(actualResult).toMatchObject({
       statusCode: 500,

@@ -1,23 +1,25 @@
 'use strict';
 import { productsService } from '../services/products-service';
+import { BaseError } from '../models/base-error';
 import { corsHeaders } from '../helpers/cors';
 
-export async function getProductsList(event) {
+export async function createProduct(event) {
   try {
-    console.log('getProductsList was called with next event', event);
-    const products = await productsService.getAvailableProducts();
+    const productData = JSON.parse(event.body);
+    console.log('createProduct was called with next data:', productData);
+    const product = await productsService.createProduct(productData);
     return {
       statusCode: 200,
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-      },
-      body: JSON.stringify(products),
+      headers: { ...corsHeaders },
+      body: JSON.stringify({ product }),
     };
   } catch (e) {
     if (e instanceof BaseError) {
       return {
         statusCode: e.code,
-        headers: { ...corsHeaders },
+        headers: {
+          ...corsHeaders,
+        },
         body: JSON.stringify({ error: e.message }),
       };
     }

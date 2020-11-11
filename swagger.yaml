@@ -28,6 +28,30 @@ paths:
             type: "array"
             items:
               $ref: "#/definitions/Product"
+    post:
+      tags:
+      - "product"
+      summary: "Create product"
+      description: ""
+      operationId: "createProduct"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "Product object that needs to be added to the store"
+        required: true
+        schema:
+          $ref: "#/definitions/ProductData"
+      responses:
+        "200":
+          description: "successful operation"
+          schema:
+            $ref: "#/definitions/Product"
+        "400":
+          description: "Incorrect request body"
   /products/{productId}:
     get:
       tags:
@@ -51,20 +75,27 @@ paths:
         "404":
           description: "Product was not found"
 definitions:
-  Product:
+  ProductData:
     type: "object"
     properties:
-      id:
-        type: "string"
-        format: "uuid"
       title:
         type: "string"
       description:
         type: "string"
       price:
         type: "number"
-        format: "float"
+        format: "integer"
+        exclusiveMinimum: true
         minimum: 0
       count:
         type: "integer"
+        exclusiveMinimum: true
         minimum: 0
+  Product:
+    allOf:
+    - type: "object"
+      properties:
+        id:
+          type: "string"
+          format: "uuid"
+    - $ref: "#/definitions/ProductData"
