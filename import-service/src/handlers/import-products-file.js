@@ -4,7 +4,8 @@ import { corsHeaders } from '../helpers/cors-headers';
 
 export async function importProductsFile(event) {
   try {
-    const fileName = event.queryStringParameters.name;
+    const fileName =
+      event.queryStringParameters && event.queryStringParameters.name;
 
     if (!fileName) {
       throw new BaseError(400, 'name should be provided in query parameters');
