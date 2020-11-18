@@ -1,0 +1,52 @@
+# Welcome to Serverless!
+
+service: import-service
+
+frameworkVersion: '2'
+
+provider:
+  name: aws
+  runtime: nodejs12.x
+  stage: dev
+  region: eu-west-1
+
+  iamRoleStatements:
+    - Effect: 'Allow'
+      Action:
+        - 's3:ListBucket'
+      Resource:
+        - 'arn:aws:s3:::${env:BUCKET}'
+    - Effect: 'Allow'
+      Action:
+        - 's3:*'
+      Resource:
+        - 'arn:aws:s3:::${env:BUCKET}/*'
+
+plugins:
+  - serverless-dotenv-plugin
+  - serverless-webpack
+
+custom:
+  webpack:
+    includeModules: true
+
+functions:
+  importProductsFile:
+    handler: src/handlers/import-products-file.importProductsFile
+    events:
+      - http:
+          path: import
+          method: get
+          request:
+            parameters:
+              querystrings:
+                name: true
+  importFileParser:
+    handler: src/handlers/import-file-parser.importFileParser
+    events:
+      - s3:
+          bucket: ${env:BUCKET}
+          event: s3:ObjectCreated:*
+          rules:
+            - prefix: uploaded/
+          existing: true
