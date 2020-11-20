@@ -10,6 +10,10 @@ provider:
   stage: dev
   region: eu-west-1
 
+  environment:
+    SQS_URL:
+      Fn::ImportValue: 'catalogItemsQueueUrl'
+
   iamRoleStatements:
     - Effect: 'Allow'
       Action:
@@ -21,6 +25,11 @@ provider:
         - 's3:*'
       Resource:
         - 'arn:aws:s3:::${env:BUCKET}/*'
+    - Effect: 'Allow'
+      Action:
+        - 'sqs:*'
+      Resource:
+        Fn::ImportValue: 'catalogItemsQueueArn'
 
 plugins:
   - serverless-dotenv-plugin

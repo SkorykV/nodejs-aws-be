@@ -11,6 +11,7 @@
   "license": "ISC",
   "dependencies": {
     "pg": "^8.4.2",
+    "pg-format": "^1.0.4",
     "source-map-support": "^0.5.19",
     "uuid-validate": "0.0.3"
   },

@@ -1,4 +1,5 @@
 import { Client } from 'pg';
+import format from 'pg-format';
 
 const { PGUSER, PGPORT, PGHOST, PGPASSWORD, PGDATABASE } = process.env;
 const dbOptions = {
@@ -66,6 +67,56 @@ class ProductPostgresRepository {
 
       await client.query('COMMIT');
       return { ...product, ...stock };
+    } catch (err) {
+      console.log('Error occurred during db request execution', err);
+      await client.query('ROLLBACK');
+      throw new Error('DB request execution error');
+    } finally {
+      await client.end();
+    }
+  }
+
+  async insertProductsBatch(data) {
+    const client = await this._connect();
+    try {
+      await client.query('BEGIN');
+
+      const productsData = data.map((product) => [
+        product.title,
+        product.description,
+        product.price,
+      ]);
+      const productsInsertQuery = format(
+        'insert into products (title, description, price) values %L on conflict (title) do nothing RETURNING *',
+        productsData,
+      );
+
+      const productRows = (await client.query(productsInsertQuery)).rows;
+
+      if (!productRows.lengh) {
+        console.log('all products from batch already exist');
+        await client.query('COMMIT');
+        return [];
+      }
+
+      const stocksData = productRows.map((product) => {
+        const count = data.find((dataRow) => dataRow.title === product.title)
+          .count;
+        return [product.id, count];
+      });
+
+      const stocksInsertQuery = format(
+        'insert into stocks (product_id, "count") values %L RETURNING "count"',
+        stocksData,
+      );
+
+      const stockRows = (await client.query(stocksInsertQuery)).rows;
+
+      await client.query('COMMIT');
+      return productRows.map((productRow, i) => ({
+        ...productRow,
+        ...stockRows[i],
+      }));
     } catch (err) {
       console.log('Error occurred during db request execution', err);
       await client.query('ROLLBACK');

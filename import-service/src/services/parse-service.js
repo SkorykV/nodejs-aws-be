@@ -1,45 +1,57 @@
 import AWS from 'aws-sdk';
 import csv from 'csv-parser';
+import { pipeline } from 'stream';
 
 class ParseService {
   constructor() {
     this._s3 = new AWS.S3({ region: 'eu-west-1' });
+    this._sqs = new AWS.SQS();
   }
   async process(bucket, key, parsedFilesFolder) {
-    await this._parseFile(bucket, key);
-    await this._moveUploadedObjectTo(bucket, key, parsedFilesFolder);
+    try {
+      await this._parseFile(bucket, key);
+      await this._moveUploadedObjectTo(bucket, key, parsedFilesFolder);
+    } catch (e) {
+      console.log('Some Error occurred on file processing', e);
+    }
   }
 
   _parseFile(bucket, key) {
     console.log(`Start parsing of ${key}`);
-    return new Promise((resolve, reject) => {
-      const params = {
-        Bucket: bucket,
-        Key: key,
-      };
+    const params = {
+      Bucket: bucket,
+      Key: key,
+    };
 
-      this._s3
-        .getObject(params)
-        .createReadStream()
-        .pipe(
-          csv({
-            mapValues: ({ header, index, value }) => {
-              if (header === 'Price' || header === 'Count') {
-                return parseInt(value);
-              }
-              return value;
-            },
-          }),
-        )
-        .on('data', (row) => console.log(row))
-        .on('error', (err) => {
-          console.log('Error occurred', err);
-          reject();
-        })
-        .on('end', () => {
+    const sqsPromises = [];
+
+    const parsingTransformStream = csv({
+      strict: true,
+      mapValues: ({ header, index, value }) => {
+        if (header === 'price' || header === 'count') {
+          return parseInt(value);
+        }
+        return value;
+      },
+    }).on('data', (row) => {
+      sqsPromises.push(this._sendProductToQueue(row));
+      console.log(row, 'was parsed');
+    });
+
+    return new Promise((resolve, reject) => {
+      pipeline(
+        this._s3.getObject(params).createReadStream(),
+        parsingTransformStream,
+        async (err) => {
+          if (err) {
+            console.log('Parsing Error occurred', err);
+            return reject(err);
+          }
+          await Promise.all(sqsPromises);
           console.log(`Finished parsing of ${key}`);
           resolve();
-        });
+        },
+      );
     });
   }
 
@@ -62,6 +74,17 @@ class ParseService {
       .promise();
 
     console.log(`Deleted ${key} from "uploaded" folder`);
+  }
+
+  async _sendProductToQueue(productData) {
+    await this._sqs
+      .sendMessage({
+        QueueUrl: process.env.SQS_URL,
+        MessageBody: JSON.stringify(productData),
+      })
+      .promise();
+
+    console.log(productData, 'sent to SQS');
   }
 }
 

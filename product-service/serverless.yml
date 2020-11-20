@@ -26,6 +26,15 @@ provider:
   stage: dev
   region: eu-west-1
 
+  iamRoleStatements:
+    - Effect: 'Allow'
+      Action:
+        - 'sqs:*'
+      Resource:
+        Fn::GetAtt:
+          - catalogItemsQueue
+          - Arn
+
 plugins:
   - serverless-dotenv-plugin
   - serverless-webpack
@@ -61,6 +70,15 @@ functions:
             parameters:
               paths:
                 productId: true
+  catalogBatchProcess:
+    handler: src/handlers/catalog-batch-process.catalogBatchProcess
+    events:
+      - sqs:
+          arn:
+            Fn::GetAtt:
+              - catalogItemsQueue
+              - Arn
+          batchSize: 5
 
 resources:
   Resources:
@@ -73,3 +91,18 @@ resources:
         ResponseType: DEFAULT_4XX
         RestApiId:
           Ref: 'ApiGatewayRestApi'
+    catalogItemsQueue:
+      Type: 'AWS::SQS::Queue'
+      Properties:
+        QueueName: 'catalogItemsQueue'
+  Outputs:
+    catalogItemsQueueUrl:
+      Value:
+        'Ref': catalogItemsQueue
+      Export:
+        Name: 'catalogItemsQueueUrl'
+    catalogItemsQueueArn:
+      Value:
+        'Fn::GetAtt': [catalogItemsQueue, Arn]
+      Export:
+        Name: 'catalogItemsQueueArn'

@@ -18,6 +18,10 @@ class ProductsService {
   async createProduct(productData) {
     return await productPostgresRepository.createProduct(productData);
   }
+
+  async createProductsBatch(productsData) {
+    return await productPostgresRepository.insertProductsBatch(productsData);
+  }
 }
 
 export const productsService = new ProductsService();
