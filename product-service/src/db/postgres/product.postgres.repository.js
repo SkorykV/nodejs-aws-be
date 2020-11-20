@@ -93,7 +93,7 @@ class ProductPostgresRepository {
 
       const productRows = (await client.query(productsInsertQuery)).rows;
 
-      if (!productRows.lengh) {
+      if (!productRows.length) {
         console.log('all products from batch already exist');
         await client.query('COMMIT');
         return [];
