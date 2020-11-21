@@ -3,4 +3,5 @@ node_modules
 .env
 jspm_packages
 .serverless
+coverage
 *.csv

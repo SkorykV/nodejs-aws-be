@@ -11,6 +11,9 @@ jest.mock('../../db/postgres/product.postgres.repository', () => {
         return product;
       }),
       createProduct: jest.fn().mockResolvedValue('createdProductMock'),
+      createProductsBatch: jest
+        .fn()
+        .mockResolvedValue('createdProductsBatchMock'),
     },
   };
 });
@@ -38,6 +41,11 @@ describe('ProductsService', () => {
   test('createProduct should retun product that was created', async () => {
     expect(await productsService.createProduct('mockedData')).toBe(
       'createdProductMock',
+    );
+  });
+  test('createProductsBatch should return products that were created', async () => {
+    expect(await productsService.createProductsBatch('mockedData')).toBe(
+      'createdProductsBatchMock',
     );
   });
 });

@@ -2,8 +2,6 @@ import { productsService } from '../services/products-service';
 import { notificationService } from '../services/notification-service';
 
 export async function catalogBatchProcess(event) {
-  console.log('catalogBatchProcess called with', event.Records);
-
   try {
     const data = event.Records.map((record) => JSON.parse(record.body));
 
@@ -11,7 +9,9 @@ export async function catalogBatchProcess(event) {
 
     if (createdProducts && createdProducts.length) {
       await Promise.all(
-        createdProducts.map(notificationService.sendProductCreatedNotification),
+        createdProducts.map((product) =>
+          notificationService.sendProductCreatedNotification(product),
+        ),
       );
     }
   } catch (e) {

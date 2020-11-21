@@ -20,7 +20,7 @@ class ProductsService {
   }
 
   async createProductsBatch(productsData) {
-    const createdProducts = await productPostgresRepository.insertProductsBatch(
+    const createdProducts = await productPostgresRepository.createProductsBatch(
       productsData,
     );
 

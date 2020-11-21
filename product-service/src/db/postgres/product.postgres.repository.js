@@ -76,7 +76,7 @@ class ProductPostgresRepository {
     }
   }
 
-  async insertProductsBatch(data) {
+  async createProductsBatch(data) {
     const client = await this._connect();
     try {
       await client.query('BEGIN');
