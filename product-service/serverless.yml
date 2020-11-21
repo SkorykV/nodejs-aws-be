@@ -26,6 +26,9 @@ provider:
   stage: dev
   region: eu-west-1
 
+  environment:
+    createProductTopicARN: !Ref 'createProductTopic'
+
   iamRoleStatements:
     - Effect: 'Allow'
       Action:
@@ -34,6 +37,10 @@ provider:
         Fn::GetAtt:
           - catalogItemsQueue
           - Arn
+    - Effect: 'Allow'
+      Action:
+        - 'sns:*'
+      Resource: !Ref 'createProductTopic'
 
 plugins:
   - serverless-dotenv-plugin
@@ -95,6 +102,24 @@ resources:
       Type: 'AWS::SQS::Queue'
       Properties:
         QueueName: 'catalogItemsQueue'
+    createProductTopic:
+      Type: AWS::SNS::Topic
+      Properties:
+        TopicName: createProductTopic
+    createProductTopicSubscription:
+      Type: AWS::SNS::Subscription
+      Properties:
+        Endpoint: volodymyr.skorik@gmail.com
+        Protocol: email
+        FilterPolicy: { 'price': [{ 'numeric': ['<', 300] }] }
+        TopicArn: !Ref 'createProductTopic'
+    createdExpensiveProductSubscription:
+      Type: AWS::SNS::Subscription
+      Properties:
+        Endpoint: volodymyr_skoryk@epam.com
+        Protocol: email
+        FilterPolicy: { 'price': [{ 'numeric': ['>=', 300] }] }
+        TopicArn: !Ref 'createProductTopic'
   Outputs:
     catalogItemsQueueUrl:
       Value:
