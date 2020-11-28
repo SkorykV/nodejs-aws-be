@@ -67,6 +67,18 @@ functions:
       - http:
           path: products
           method: get
+          cors: true
+          authorizer:
+            name: cognitoAuthorizer
+            resultTtlInSeconds: 0
+            type: COGNITO_USER_POOLS
+            arn: !Join
+              - ':'
+              - - 'arn:aws:cognito-idp'
+                - !Ref AWS::Region
+                - !Ref AWS::AccountId
+                - 'userpool/eu-west-1_NDZVU7aZr'
+            identitySource: method.request.header.Authorization
   getProductById:
     handler: src/handlers/get-product-by-id.getProductById
     events:
