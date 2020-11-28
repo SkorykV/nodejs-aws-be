@@ -1,7 +1,15 @@
 import { createProduct } from '../create-product';
 import { productsService } from '../../services/products-service';
+import { notificationService } from '../../services/notification-service';
 import { BaseError } from '../../models/base-error';
 import { corsHeaders } from '../../helpers/cors';
+
+jest.mock('../../services/notification-service', () => {
+  const notificationServiceInstance = {
+    sendProductCreatedNotification: jest.fn(),
+  };
+  return { notificationService: notificationServiceInstance };
+});
 
 jest.mock('../../services/products-service', () => {
   const productsServiceInstance = {
@@ -32,6 +40,23 @@ describe('createProduct', () => {
       body: JSON.stringify({ product: productMock }),
     });
   });
+
+  test('should send notification about new product created', async () => {
+    const productMock = {
+      id: 'newProductId',
+      title: 'testId',
+      description: 'test description',
+      price: 123,
+      count: 3,
+    };
+    productsService.createProduct.mockResolvedValueOnce(productMock);
+
+    await createProduct(eventMock);
+    expect(
+      notificationService.sendProductCreatedNotification,
+    ).toHaveBeenCalledWith(productMock);
+  });
+
   test('should return response with error, if service throws BaseError', async () => {
     const error = new BaseError(500, 'Some test error');
     productsService.createProduct.mockRejectedValueOnce(error);

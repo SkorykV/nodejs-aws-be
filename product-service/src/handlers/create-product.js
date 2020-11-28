@@ -1,5 +1,6 @@
 'use strict';
 import { productsService } from '../services/products-service';
+import { notificationService } from '../services/notification-service';
 import { BaseError } from '../models/base-error';
 import { corsHeaders } from '../helpers/cors';
 
@@ -8,6 +9,7 @@ export async function createProduct(event) {
     const productData = JSON.parse(event.body);
     console.log('createProduct was called with next data:', productData);
     const product = await productsService.createProduct(productData);
+    await notificationService.sendProductCreatedNotification(product);
     return {
       statusCode: 200,
       headers: { ...corsHeaders },

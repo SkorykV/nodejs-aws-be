@@ -15,7 +15,7 @@ describe('getProductById', () => {
   beforeEach(() => {
     eventMock = {
       pathParameters: {
-        productId: 'testId',
+        productId: 'b2ba7492-c247-4d9d-9c3a-8e84414acb94',
       },
     };
   });
@@ -27,6 +27,13 @@ describe('getProductById', () => {
       statusCode: 200,
       headers: { ...corsHeaders },
       body: JSON.stringify({ product: productMock }),
+    });
+  });
+  test('should return response with error, if passed productId is not uuid', async () => {
+    eventMock.pathParameters.productId = 'random';
+    expect(await getProductById(eventMock)).toMatchObject({
+      statusCode: 400,
+      body: JSON.stringify({ error: 'product id should be uuid' }),
     });
   });
   test('should return response with error, if service throws BaseError', async () => {
