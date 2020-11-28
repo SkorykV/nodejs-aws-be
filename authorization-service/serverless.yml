@@ -1,0 +1,34 @@
+service: authorization-service
+frameworkVersion: '2'
+
+provider:
+  name: aws
+  runtime: nodejs12.x
+  stage: dev
+  region: eu-west-1
+
+plugins:
+  - serverless-webpack
+  - serverless-dotenv-plugin
+
+custom:
+  webpack:
+    includeModules: true
+
+functions:
+  basicAuthorizer:
+    handler: src/handlers/basic-authorizer.basicAuthorizer
+
+resources:
+  Resources:
+    LoginApiToInvokeLambda:
+      Type: AWS::Lambda::Permission
+      DependsOn: 'BasicAuthorizerLambdaFunction'
+      Properties:
+        FunctionName: ${self:service}-${self:provider.stage}-basicAuthorizer
+        Action: lambda:InvokeFunction
+        Principal: apigateway.amazonaws.com
+  Outputs:
+    BasicAuthorizerLambdaFunctionQualifiedArn:
+      Export:
+        Name: BasicAuthorizerLambdaFunctionQualifiedArn

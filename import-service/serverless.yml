@@ -46,10 +46,24 @@ functions:
       - http:
           path: import
           method: get
+          cors: true
           request:
             parameters:
               querystrings:
                 name: true
+          authorizer:
+            name: BasicAuthorizer
+            arn: !Join
+              - ':'
+              - - 'arn:aws:lambda'
+                - !Ref AWS::Region
+                - !Ref AWS::AccountId
+                - 'function:authorization-service-${self:provider.stage}-basicAuthorizer'
+            managedExternally: false
+            resultTtlInSeconds: 0
+            identitySource: method.request.header.Authorization
+            identityValidationExpression: Basic (.*)
+            type: token
   importFileParser:
     handler: src/handlers/import-file-parser.importFileParser
     events:
@@ -59,3 +73,33 @@ functions:
           rules:
             - prefix: uploaded/
           existing: true
+
+resources:
+  Resources:
+    GatewayResponseUnauthorized:
+      Type: 'AWS::ApiGateway::GatewayResponse'
+      Properties:
+        ResponseParameters:
+          gatewayresponse.header.Access-Control-Allow-Origin: "'*'"
+          gatewayresponse.header.Access-Control-Allow-Headers: "'*'"
+        ResponseType: UNAUTHORIZED
+        RestApiId:
+          Ref: 'ApiGatewayRestApi'
+    GatewayResponseAccessDenied:
+      Type: 'AWS::ApiGateway::GatewayResponse'
+      Properties:
+        ResponseParameters:
+          gatewayresponse.header.Access-Control-Allow-Origin: "'*'"
+          gatewayresponse.header.Access-Control-Allow-Headers: "'*'"
+        ResponseType: ACCESS_DENIED
+        RestApiId:
+          Ref: 'ApiGatewayRestApi'
+    GatewayResponseAuthorizerFailure:
+      Type: 'AWS::ApiGateway::GatewayResponse'
+      Properties:
+        ResponseParameters:
+          gatewayresponse.header.Access-Control-Allow-Origin: "'*'"
+          gatewayresponse.header.Access-Control-Allow-Headers: "'*'"
+        ResponseType: AUTHORIZER_FAILURE
+        RestApiId:
+          Ref: 'ApiGatewayRestApi'
