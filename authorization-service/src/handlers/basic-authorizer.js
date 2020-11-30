@@ -8,16 +8,24 @@ export function basicAuthorizer(event, context, callback) {
     return callback('Unauthorized');
   }
 
-  const [username, password] = parseBasicToken(event.authorizationToken);
+  try {
+    const [username, password] = parseBasicToken(event.authorizationToken);
 
-  const isAuthorized = authService.authorize(username, password);
+    const isAuthorized = authService.authorize(username, password);
 
-  if (!isAuthorized) {
-    return callback(
+    if (!isAuthorized) {
+      return callback(
+        null,
+        generatePolicy(username, PolicyEffect.deny, event.methodArn),
+      );
+    }
+
+    callback(
       null,
-      generatePolicy(username, PolicyEffect.deny, event.methodArn),
+      generatePolicy(username, PolicyEffect.allow, event.methodArn),
     );
+  } catch (e) {
+    console.log('Authorizer error', e);
+    callback(e);
   }
-
-  callback(null, generatePolicy(username, PolicyEffect.allow, event.methodArn));
 }
