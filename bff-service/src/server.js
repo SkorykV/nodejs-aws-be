@@ -1,11 +1,17 @@
 require('dotenv').config();
+const redis = require('redis');
 const express = require('express');
 const axios = require('axios');
-const cacheService = require('./services/cache-service').cacheService;
+//const cacheService = require('./services/cache-service').cacheService;
 
 const app = express();
 
 app.use(express.json());
+
+const client = redis.createClient(
+  6379,
+  'redis-cache-bff.4s39ut.0001.euw1.cache.amazonaws.com',
+);
 
 app.all('*', async function (req, res) {
   const [serviceName, ...apiPathParts] = req.path.slice(1).split('/');
@@ -24,10 +30,13 @@ app.all('*', async function (req, res) {
 
   const cacheKey = JSON.stringify(urlConfig);
 
-  if (req.method === 'GET' && cacheService.checkInCache(cacheKey)) {
-    const cachedResponse = cacheService.getFromCache(cacheKey);
-    res.status(cachedResponse.status).json(cachedResponse.data);
-    return;
+  if (req.method === 'GET') {
+    const cachedResponse = JSON.parse(client.get(cacheKey));
+    if (cachedResponse) {
+      console.log('I RETURN RESPONSE FROM CACHE FOR', cacheKey);
+      res.status(cachedResponse.status).json(cachedResponse.data);
+      return;
+    }
   }
 
   const requestConfig = {
@@ -46,10 +55,21 @@ app.all('*', async function (req, res) {
     const response = await axios(requestConfig);
 
     if (req.method === 'GET') {
-      cacheService.cacheForNms(
+      // cacheService.cacheForNms(
+      //   cacheKey,
+      //   { status: response.status, data: response.data },
+      //   20000,
+      // );
+      client.set(
         cacheKey,
-        { status: response.status, data: response.data },
-        20000,
+        JSON.stringify({ status: response.status, data: response.data }),
+        'EX',
+        60 * 2,
+        (err) => {
+          if (!err) {
+            console.log('I SET FOR ', cacheKey);
+          }
+        },
       );
     }
 
