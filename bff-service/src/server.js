@@ -1,19 +1,34 @@
-require('dotenv').config();
 const redis = require('redis');
 const express = require('express');
 const axios = require('axios');
-//const cacheService = require('./services/cache-service').cacheService;
+const getCacheMiddleWare = require('./middlewares/cache-middleware');
+const { mapHeaders, hasBody } = require('./helpers/request-helpers');
+
+const ENVIRONMENT = process.env.NODE_ENV || 'development';
+
+console.log(`Running in ${ENVIRONMENT} environment`);
+
+if (ENVIRONMENT !== 'production') {
+  require('dotenv').config();
+}
 
 const app = express();
 
 app.use(express.json());
 
-const client = redis.createClient(
-  6379,
-  'redis-cache-bff.4s39ut.0001.euw1.cache.amazonaws.com',
+const redisClient = redis.createClient(
+  process.env.REDIS_PORT || 6379,
+  process.env.REDIS_HOST,
 );
 
-app.all('*', async function (req, res) {
+redisClient.on('error', function (error) {
+  if (error.code === 'ECONNREFUSED') {
+    console.error('Can`t connect to the Redis cache', error);
+    process.exit(1);
+  }
+});
+
+app.all('*', getCacheMiddleWare(redisClient), async function (req, res) {
   const [serviceName, ...apiPathParts] = req.path.slice(1).split('/');
 
   const recepientURL = process.env[serviceName];
@@ -23,51 +38,29 @@ app.all('*', async function (req, res) {
     return;
   }
 
-  const urlConfig = {
+  const requestConfig = {
     baseURL: recepientURL,
     url: apiPathParts.join('/'),
-  };
-
-  const cacheKey = JSON.stringify(urlConfig);
-
-  if (req.method === 'GET') {
-    const cachedResponse = JSON.parse(client.get(cacheKey));
-    if (cachedResponse) {
-      console.log('I RETURN RESPONSE FROM CACHE FOR', cacheKey);
-      res.status(cachedResponse.status).json(cachedResponse.data);
-      return;
-    }
-  }
-
-  const requestConfig = {
-    ...urlConfig,
     method: req.method,
     headers: mapHeaders(req.headers, req.method),
+    params: req.query,
   };
 
-  if (couldHaveBody(req.method)) {
+  if (hasBody(req.method)) {
     requestConfig.data = req.body;
   }
-
-  //console.log(JSON.stringify(requestConfig, null, 4));
 
   try {
     const response = await axios(requestConfig);
 
     if (req.method === 'GET') {
-      // cacheService.cacheForNms(
-      //   cacheKey,
-      //   { status: response.status, data: response.data },
-      //   20000,
-      // );
-      client.set(
-        cacheKey,
-        JSON.stringify({ status: response.status, data: response.data }),
-        'EX',
+      redisClient.setex(
+        req.originalUrl,
         60 * 2,
+        JSON.stringify({ status: response.status, data: response.data }),
         (err) => {
           if (!err) {
-            console.log('I SET FOR ', cacheKey);
+            console.log('I SAVED RESPONSE FOR ', req.originalUrl);
           }
         },
       );
@@ -75,26 +68,12 @@ app.all('*', async function (req, res) {
 
     res.status(response.status).json(response.data);
   } catch (e) {
-    //console.log(e);
     res.status(e.response.status).json(e.response.data);
   }
 });
 
-const port = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3000;
 
-app.listen(port, () => {
-  console.log('server started');
+app.listen(PORT, () => {
+  console.log(`server started on port ${PORT}`);
 });
-
-function mapHeaders(requestHeaders, method) {
-  const recepientRequestHeaders = { ...requestHeaders };
-  delete recepientRequestHeaders['host'];
-  if (!couldHaveBody(method)) {
-    delete recepientRequestHeaders['content-length'];
-  }
-  return recepientRequestHeaders;
-}
-
-function couldHaveBody(method) {
-  return method === 'POST' || method === 'PUT' || method === 'PATCH';
-}
