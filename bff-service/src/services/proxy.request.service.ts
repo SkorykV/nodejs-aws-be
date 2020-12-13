@@ -3,24 +3,18 @@ import axios, { AxiosRequestConfig, AxiosResponse, Method } from 'axios';
 import { Request } from 'express';
 import { hasBody, mapHeaders } from 'src/helpers/request-helpers';
 
-export interface ProxiedRequestResponse {
-  requestConfig: AxiosRequestConfig;
-  response: AxiosResponse<any>;
-}
-
 @Injectable()
 export class ProxyRequestService {
   async getResponseFromRecipient(
     recepientURL: string,
     req: Request,
-  ): Promise<ProxiedRequestResponse> {
+  ): Promise<AxiosResponse<any>> {
     try {
       console.log(
         `Processing request to ${recepientURL} with path ${req.path}`,
       );
       const requestConfig = this.compileRequestConfig(recepientURL, req);
-      const response = await axios(requestConfig);
-      return { requestConfig, response };
+      return await axios(requestConfig);
     } catch (error) {
       if (error.isAxiosError) {
         throw new HttpException(error.response?.data, error.response?.status);

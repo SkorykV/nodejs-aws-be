@@ -13,10 +13,7 @@ import {
   CacheRequestService,
   ResponseCache,
 } from './services/cache-request.service';
-import {
-  ProxiedRequestResponse,
-  ProxyRequestService,
-} from './services/proxy.request.service';
+import { ProxyRequestService } from './services/proxy.request.service';
 
 @Controller()
 export class AppController {
@@ -37,20 +34,20 @@ export class AppController {
       throw new HttpException('Cannot process request', HttpStatus.BAD_GATEWAY);
     }
 
-    const recepientResponse: ProxiedRequestResponse = await this.proxyRequestService.getResponseFromRecipient(
+    const recepientResponse = await this.proxyRequestService.getResponseFromRecipient(
       recepientURL,
       req,
     );
 
     if (req.method === 'GET') {
       const responseCache: ResponseCache = {
-        status: recepientResponse.response.status,
-        data: recepientResponse.response.data,
+        status: recepientResponse.status,
+        data: recepientResponse.data,
       };
       this.cacheService.saveResponse(req, responseCache, 60 * 2);
     }
 
-    res.status(recepientResponse.response.status);
-    return recepientResponse.response.data;
+    res.status(recepientResponse.status);
+    return recepientResponse.data;
   }
 }
