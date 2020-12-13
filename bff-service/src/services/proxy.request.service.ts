@@ -23,12 +23,7 @@ export class ProxyRequestService {
       return { requestConfig, response };
     } catch (error) {
       if (error.isAxiosError) {
-        throw new HttpException(
-          error.response?.data?.message ||
-            error.response?.data?.error ||
-            error.response?.data,
-          error.response?.status,
-        );
+        throw new HttpException(error.response?.data, error.response?.status);
       }
       throw error;
     }
