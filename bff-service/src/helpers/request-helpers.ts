@@ -1,4 +1,9 @@
-function mapHeaders(requestHeaders, method) {
+import { IncomingHttpHeaders } from 'http';
+
+export function mapHeaders(
+  requestHeaders: IncomingHttpHeaders,
+  method: string,
+) {
   const recepientRequestHeaders = { ...requestHeaders };
   delete recepientRequestHeaders['host'];
   if (!hasBody(method)) {
@@ -7,11 +12,6 @@ function mapHeaders(requestHeaders, method) {
   return recepientRequestHeaders;
 }
 
-function hasBody(method) {
+export function hasBody(method) {
   return method === 'POST' || method === 'PUT' || method === 'PATCH';
 }
-
-module.exports = {
-  mapHeaders,
-  hasBody,
-};
