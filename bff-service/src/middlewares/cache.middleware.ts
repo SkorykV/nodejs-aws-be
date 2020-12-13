@@ -5,10 +5,7 @@ import { CacheRequestService } from 'src/services/cache-request.service';
 
 @Injectable()
 export class CacheMiddleware implements NestMiddleware {
-  constructor(
-    private readonly cacheService: CacheRequestService,
-    private readonly configService: ConfigService,
-  ) {}
+  constructor(private readonly cacheService: CacheRequestService) {}
 
   async use(req: Request, res: Response, next: Function) {
     if (req.method === 'GET' && req.originalUrl === '/product/products') {
