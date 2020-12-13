@@ -11,7 +11,7 @@ export class CacheMiddleware implements NestMiddleware {
   ) {}
 
   async use(req: Request, res: Response, next: Function) {
-    if (req.method === 'GET' && this.configService.get(req.baseUrl.slice(1))) {
+    if (req.method === 'GET' && req.originalUrl === '/product/products') {
       const cachedResponse = await this.cacheService.getResponse(req);
       if (cachedResponse) {
         console.log(`Return response for ${req.originalUrl} from cache`);

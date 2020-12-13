@@ -39,7 +39,7 @@ export class AppController {
       req,
     );
 
-    if (req.method === 'GET') {
+    if (req.method === 'GET' && req.originalUrl === '/product/products') {
       const responseCache: ResponseCache = {
         status: recepientResponse.status,
         data: recepientResponse.data,
